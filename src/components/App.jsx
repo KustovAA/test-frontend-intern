@@ -68,7 +68,7 @@ export class App extends Component {
               return 0;
             })
             .map(it => (
-              <tr>
+              <tr key={it.Email}>
                 <td>{it.Name}</td>
                 <td>{it.Email}</td>
                 <td>{it.Phone}</td>
