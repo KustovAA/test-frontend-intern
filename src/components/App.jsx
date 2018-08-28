@@ -1,16 +1,27 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import './App.css';
-import { sortByName, sortByEmail, sortByPhone, sortByCompany } from 'actions';
+import { sort } from 'actions';
 import * as profiles from 'profiles';
+import './App.css'; 
 
-export class App extends Component {
+class App extends Component {
+
+  sort = (a, b, sortType, direction) => {
+    const arg_a = a[sortType].toLowerCase().split(/\(|\)/).join('');
+    const arg_b = b[sortType].toLowerCase().split(/\(|\)/).join('');
+    if (arg_a < arg_b) {
+      return direction ? -1 : 1;
+    }
+    if (arg_a > arg_b) {
+      return direction ? 1 : -1;
+    }
+
+    return 0;
+  }
+
   render() {
     const { 
-      onSortByName, 
-      onSortByEmail, 
-      onSortByPhone, 
-      onSortByCompany, 
+      onSort,
       sortType
     } = this.props;
     const direction = this.props.direction === null ? true : this.props.direction;
@@ -19,63 +30,30 @@ export class App extends Component {
       <table className="table">
         <tbody>
           <tr>
-            <th>
-              Name
-              <button onClick={() => onSortByName(true)}>
-                Up
-              </button>
-              <button className='down' onClick={() => onSortByName(false)}>
-                Down
-              </button>
-            </th>
-            <th>
-                Email
-                <button onClick={() => onSortByEmail(true)}>
+            {Object.keys([...profiles][0]).map(it => (
+              <th key={it}>
+                {it}
+                <button onClick={() => onSort({type: it, direction: true})}>
                   Up
                 </button>
-                <button className='down' onClick={() => onSortByEmail(false)}>
+                <button className='down' onClick={() => onSort({type: it, direction: false})}>
                   Down
                 </button>
             </th>
-            <th>
-                Phone
-                <button onClick={() => onSortByPhone(true)}>
-                  Up
-                </button>
-                <button className='down' onClick={() => onSortByPhone(false)}>
-                  Down
-                </button>
-            </th>
-            <th>
-                Company
-                <button onClick={() => onSortByCompany(true)}>
-                  Up
-                </button>
-                <button className='down' onClick={() => onSortByCompany(false)}>
-                  Down
-                </button>
-            </th>
+            ))}
           </tr>
           {profiles
-            .sort((a, b) => {
-              if (a[sortType] < b[sortType]) {
-                return direction ? -1 : 1;
-              }
-              if (a[sortType] > b[sortType]) {
-                return direction ? 1 : -1;
-              }
-
-              return 0;
+            .sort((a, b) => this.sort(a, b, sortType, direction))
+            .map((it, ndx) => {
+              return (
+                <tr key={ndx + new Date().getTime()}>
+                  {Object.keys(it).map((type, ndx) => (
+                    <td key={ndx + new Date().getTime()}>{it[type]}</td>
+                  ))}
+                </tr>
+              )
             })
-            .map(it => (
-              <tr key={it.Email}>
-                <td>{it.Name}</td>
-                <td>{it.Email}</td>
-                <td>{it.Phone}</td>
-                <td>{it.Company}</td>
-              </tr>
-            )
-          )}
+          }
         </tbody>
       </table>
     );
@@ -88,25 +66,10 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-  onSortByName: (direction) => {
+  onSort: ({ type, direction}) => {
     localStorage.setItem('direction', direction);
-    localStorage.setItem('sortType', 'Name');
-    dispatch(sortByName(direction))
-  },
-  onSortByEmail: (direction) => {
-    localStorage.setItem('direction', direction);
-    localStorage.setItem('sortType', 'Email');
-    dispatch(sortByEmail(direction))
-  },
-  onSortByPhone: (direction) => {
-    localStorage.setItem('direction', direction);
-    localStorage.setItem('sortType', 'Phone');
-    dispatch(sortByPhone(direction))
-  },
-  onSortByCompany: (direction) => {
-    localStorage.setItem('direction', direction);
-    localStorage.setItem('sortType', 'Company');
-    dispatch(sortByCompany(direction))
+    localStorage.setItem('sortType', type);
+    dispatch(sort({ type, direction }))
   }
 });
 
